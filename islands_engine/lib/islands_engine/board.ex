@@ -19,6 +19,14 @@ defmodule IslandsEngine.Board do
     |> guess_reposne(board)
   end
 
+  def set_islands(board) do
+    if Enum.all?(Island.types, &(Map.has_key?(board, &1))) do
+      {:ok, board}
+    else
+      {:error, :all_islands_not_positioned}
+    end
+  end
+
   defp check_all_islands(board, coord) do
     Enum.find_value(board, :miss, fn {key, island} ->
       case Island.guess(island, coord) do
