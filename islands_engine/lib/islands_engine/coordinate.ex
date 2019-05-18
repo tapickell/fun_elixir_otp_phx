@@ -11,10 +11,4 @@ defmodule IslandsEngine.Coordinate do
   end
 
   def new(_, _), do: {:error, :invalid_coordinate}
-
-  # Using the new row and col ranges are respected but
-  # if you use the %Coordinate{row: -1, 12} syntax
-  # it bypasses the new guard clauses and invalid
-  # coord ranges are ablt to be used. How do we enforce
-  # only using the new/2 function?
 end

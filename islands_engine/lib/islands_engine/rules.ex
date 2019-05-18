@@ -53,7 +53,7 @@ defmodule IslandsEngine.Rules do
     {:ok, rules}
   end
 
-  def check(_state, _action), do: :error
+  def check(_state, _action), do: {:error, :rules_not_allowed}
 
   defp both_players_islands_set?(%Rules{player1: :islands_set, player2: :islands_set}), do: true
   defp both_players_islands_set?(_rules), do: false

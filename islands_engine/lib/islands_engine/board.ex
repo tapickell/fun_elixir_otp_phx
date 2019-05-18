@@ -9,7 +9,7 @@ defmodule IslandsEngine.Board do
       true ->
         {:error, :overlapping_island}
       false ->
-        Map.put(board, key, island)
+        {:ok, Map.put(board, key, island)}
     end
   end
 

@@ -1,0 +1,1 @@
+alias IslandsEngine.{Game, Rules}
