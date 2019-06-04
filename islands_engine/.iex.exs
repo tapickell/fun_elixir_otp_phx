@@ -1,1 +1,1 @@
-alias IslandsEngine.{Game, Rules}
+alias IslandsEngine.{Game, GameSupervisor, Rules}
