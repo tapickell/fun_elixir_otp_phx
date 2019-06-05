@@ -4,15 +4,22 @@ defmodule IslandsEngine.Game do
   alias IslandsEngine.{Board, Coordinate, Guesses, Island, Player, Rules}
 
   @players Player.valid_players()
-  @timeout 15000 * 60
+  @timeout 15000 * 60 * 60
 
   def start_link(name) when is_binary(name) do
     GenServer.start_link(__MODULE__, name, name: via_tuple(name))
   end
 
   def init(name) do
-    {:ok, %{player1: Player.new(name), player2: Player.new(), rules: %Rules{}}, @timeout}
+    {:ok, fresh_state(name), {:continue, :check_state_cache}}
   end
+
+  def terminate({:shutdown, :timeout}, state) do
+    :ets.delete(:game_state, state.player1.name)
+    :ok
+  end
+
+  def terminate(_, _), do: :ok
 
   def add_player(game, name) when is_binary(name) do
     GenServer.call(game, {:add_player, name})
@@ -28,6 +35,15 @@ defmodule IslandsEngine.Game do
 
   def guess_coord(game, player, r, c) when player in @players do
     GenServer.call(game, {:guess_coord, player, r, c})
+  end
+
+  def handle_continue(:check_state_cache, %{player1: p1} = state) do
+    new_state = case cached_state(p1.name) do
+      [] -> cache_state(state, p1.name)
+      [{_k, cached_state}] -> cached_state
+    end
+
+    {:noreply, new_state, @timeout}
   end
 
   def handle_call({:add_player, name}, _from, state) do
@@ -111,6 +127,25 @@ defmodule IslandsEngine.Game do
 
   defp update_rules(state, rules) do
     %{state | rules: rules}
+  end
+
+  defp cache_state(state, name) do
+    :ets.insert(:game_state, {name, state})
+    state
+  end
+
+  defp cached_state(name) do
+    :ets.lookup(:game_state, name)
+  end
+
+  defp fresh_state(name) do
+    %{player1: Player.new(name), player2: Player.new(), rules: %Rules{}}
+  end
+
+  defp reply(:ok, state) do
+    :ets.insert(:game_state, {state.player1.name, state})
+
+    {:reply, :ok, state, @timeout}
   end
 
   defp reply(reply, state) do
