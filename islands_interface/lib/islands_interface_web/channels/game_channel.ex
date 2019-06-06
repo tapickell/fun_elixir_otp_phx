@@ -7,12 +7,17 @@ defmodule IslandsInterfaceWeb.GameChannel do
   @types [:atoll, :dot, :l_shape, :s_shape, :square]
 
   def join("game:" <> _player, %{"screen_name" => screen_name}, socket) do
-    send(self(), {:after_join, screen_name})
-    {:ok, socket}
+    if authorized?(socket, screen_name) do
+      send(self(), {:after_join, screen_name})
+      {:ok, socket}
+    else
+      {:error, %{reason: "unauthorized"}}
+    end
   end
 
   def handle_info({:after_join, screen_name}, socket) do
-    {:ok, _} = Presence.track(socket, screen_name, %{online_at: inspect(System.system_time(:seconds))})
+    {:ok, resp} = Presence.track(socket, screen_name, %{online_at: inspect(System.system_time(:second))})
+    IO.inspect(resp, label: "After join call #{inspect(screen_name)}")
     {:noreply, socket}
   end
 
@@ -84,6 +89,32 @@ defmodule IslandsInterfaceWeb.GameChannel do
   def handle_in(event, params, socket) do
     IO.inspect("Event #{inspect(event)} with params #{inspect(params)} on channel")
     {:reply, :ok, socket}
+  end
+
+  defp authorized?(socket, screen_name) do
+    n = number_of_players(socket) |> IO.inspect(label: "number_of_players")
+    np = new_player?(socket, screen_name) |> IO.inspect(label: "new_player?")
+    n < 2 && np
+    |> IO.inspect(label: "authorized?")
+  end
+
+  defp number_of_players(socket) do
+    socket
+    |> IO.inspect(label: "num players socket")
+    |> Presence.list()
+    |> IO.inspect(label: "num players presence list")
+    |> Map.keys()
+    |> length()
+  end
+
+  defp new_player?(socket, screen_name) do
+    exists = socket
+    |> IO.inspect(label: "new player socket")
+    |> Presence.list()
+    |> IO.inspect(label: "new player presence list")
+    |> Map.has_key?(screen_name)
+
+    !exists
   end
 
   defp player("game:" <> player) do

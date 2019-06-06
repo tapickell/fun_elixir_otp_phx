@@ -26,13 +26,8 @@ function listSubs(channel) {
 let tommy_gc = newChannel("Tommy", "Tommy");
 channelPresence(tommy_gc);
 
-let cheech_gc = newChannel("Tommy", "Cheech");
-channelPresence(cheech_gc);
-
 joinChannel(tommy_gc);
-joinChannel(cheech_gc);
 listSubs(tommy_gc);
-listSubs(cheech_gc);
 
 export {
   newChannel,
